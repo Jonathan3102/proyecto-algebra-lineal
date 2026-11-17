@@ -1,14 +1,14 @@
 def gauss_seidel(A, b, x0, tol, max_iter):
     """ Solución de Gauss-Seidel para sistemas de ecuaciones lineales Ax = b.
-    Parámetros:
+    Args:
         A (List[List[float]]): Tamaño n x n de la matriz cuadrada.
         b (List[float]): Lado derecho de la igualdad del sistema.
         x0 (List[float] | None): Valor inicial de la iteración. Si es None, usa vector cero.
         tol (float): Valor de tolerancia para la convergencia.
         max_iter (int): Número máximo de iteraciones.
 
-    Devuelve:
-        Diccionario con la solución aproximada, número de iteraciones realizadas, y estado de convergencia.
+    Returns:
+        dict:Diccionario con la solución aproximada, número de iteraciones realizadas, y estado de convergencia.
         x (List[float]): Solución aproximada del sistema.
         iteraciones (int): Número de iteraciones realizadas.
         convergio (bool): Indica si el método convergió dentro del número máximo de iteraciones.
