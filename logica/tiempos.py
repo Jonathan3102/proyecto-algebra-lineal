@@ -1,7 +1,7 @@
 import time
 import copy
 import random
-import logica.Gauss_Seidel 
+import Gauss_Seidel 
 
 def medir_tiempo(funcion, A, b, repeticiones):
     """
@@ -45,7 +45,7 @@ def comparar_tiempos(A, b, metodo_directo, x0, tol, max_iter, k):
         dict: Un diccionario con los tiempos y resultados de ambos métodos.
     """
     tiempo_directo = medir_tiempo(metodo_directo, A, b, k)
-    tiempo_gauss_seidel = medir_tiempo(lambda A, b: logica.Gauss_Seidel.gauss_seidel(A, b, x0, tol, max_iter), A, b, k)
+    tiempo_gauss_seidel = medir_tiempo(lambda A, b: Gauss_Seidel.gauss_seidel(A, b, x0, tol, max_iter), A, b, k)
 
     if(float (tiempo_gauss_seidel['promedio']) < float (tiempo_directo['promedio'])):
         mas_rapido, veces = "Gauss-Seidel", float (tiempo_directo['promedio']) / float (tiempo_gauss_seidel['promedio'])
@@ -108,7 +108,7 @@ def main():
     print("Inicio del experimento")
     tamano = 10  # Tamaño del sistema a generar
     x0 = [0.0] * tamano  # Valor inicial para el método de Gauss-Seidel
-    tol = 1e-8  # Tolerancia para la convergencia del método de Gauss-Seidel
+    tol = 1e-6  # Tolerancia para la convergencia del método de Gauss-Seidel
     max_iter = 100  # Número máximo de iteraciones para el método de Gauss-Seidel
     k = 10  # Número de repeticiones para medir el tiempo
 
