@@ -26,8 +26,6 @@ def gauss_seidel(A, b, x0, tol, max_iter):
     if len(x) != n:
         raise ValueError("El valor inicial debe tener el mismo tamaño que el sistema.")
 
-    iteraciones = 0
-    convergio = False
     # Iteración de Gauss-Seidel
     for iteracion in range(1, max_iter + 1):
         x_nuevo = x.copy()
@@ -37,42 +35,32 @@ def gauss_seidel(A, b, x0, tol, max_iter):
             x_nuevo[i] = (b[i] - suma) / A[i][i]
 
         error = max(abs(x_nuevo[i] - x[i]) for i in range(n))
-        print(f"Iteración {iteracion}: x = {x_nuevo}, mayor cambio = {error}")  # Debug: muestra el progreso de la iteración.
         x = x_nuevo
 
         if error < tol:
-            iteraciones = iteracion
-            convergio = True
+            return {"x": x, "iteraciones": iteracion, "convergio": True}
 
-    if(not convergio): # No convergió dentro del número máximo de iteraciones.
-        iteraciones = max_iter
-        convergio = False
-
-    return {
-        "x": x,
-        "iteraciones": iteraciones,
-        "convergio": convergio,
-    }
+    #El sistema no converge dentro del número máximo de iteraciones
+    return {"x": x, "iteraciones": max_iter, "convergio": False}
 
 
-def main ():
-    print("Inicio")
-    A = [
-        [10, 1, 1],
-        [1, 10, 1],
-        [1, 1, 10],
-    ]
-    b = [12,12,12]
-    x0 = [0, 0, 0]
+# def main ():
+#     print("Inicio")
+#     A = [
+#         [10, 1, 1],
+#         [1, 10, 1],
+#         [1, 1, 10],
+#     ]
+#     b = [12,12,12]
+#     x0 = [0, 0, 0]
+#     resultado = gauss_seidel(A, b, x0, 10**(-6), 10)
+#     if(not resultado["convergio"]):
+#         print("No se alzanzó la tolerancia. Aumente el máximo de iteraciones.")
+#         print(f"Última aproximación: {resultado['x']}")
+#         print(f"Iteraciones realizadas: {resultado['iteraciones']}")
+#     else:        
+#         print("\nSistema de ecuaciones resuelto con éxito.")
+#         print(f"Solución: {resultado['x']}")
+#         print(f"Iteraciones: {resultado['iteraciones']}")
 
-    resultado = gauss_seidel(A, b, x0, 10**(-6), 10)
-    if(not resultado["convergio"]):
-        print("No se alzanzó la tolerancia. Aumente el máximo de iteraciones.")
-        print(f"Última aproximación: {resultado["x"]}")
-        print(f"Iteraciones realizadas: {resultado["iteraciones"]}")
-    else:        
-        print("\nSistema de ecuaciones resuelto con éxito.")
-        print(f"Solución: {resultado["x"]}")
-        print(f"Iteraciones: {resultado["iteraciones"]}")
-
-main()
+#main()
