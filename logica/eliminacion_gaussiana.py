@@ -1,7 +1,7 @@
 from fractions import Fraction
 
 
-def _convertir_fraccion(valor):
+def a_fraccion(valor):
     """Convierte un valor numérico a Fraction, por ejemplo, "1/3" a un tercio, 
        acepta enteros, decimales, fracciones y textos numéricos.
     """
@@ -12,8 +12,8 @@ def _convertir_fraccion(valor):
         raise ValueError(f"Valor numérico no válido: {valor!r}.") from error
 
 
-def _crear_matriz_ampliada(A, b):
-    """Valida las dimensiones y construye una nueva matriz ampliada [A | b].
+def armar_matriz_aumentada(A, b):
+    """Valida las dimensiones y construye una nueva matriz aumentada [A | b].
 
     A debe tener n filas y n columnas; b debe contener n valores.
     """
@@ -27,15 +27,15 @@ def _crear_matriz_ampliada(A, b):
     for indice, fila in enumerate(A):
         if len(fila) != n:
             raise ValueError("A debe ser cuadrada y todas sus filas deben medir lo mismo.")
-        fila_ampliada = [_convertir_fraccion(valor) for valor in fila]
+        fila_aumentada = [a_fraccion(valor) for valor in fila]
         # Pegamos el término independiente al final de cada fila: [fila de A | b_i]
-        fila_ampliada.append(_convertir_fraccion(b[indice]))
-        matriz.append(fila_ampliada)
+        fila_aumentada.append(a_fraccion(b[indice]))
+        matriz.append(fila_aumentada)
     return matriz
 
 
-def eliminar(matriz):
-    """Transforma una matriz ampliada en forma escalonada mediante operaciones de filas.
+def escalonar_matriz(matriz):
+    """Transforma una matriz aumentada en forma escalonada mediante operaciones de filas.
 
     Devuelve dos listas: las operaciones descritas con texto y las posiciones
     de los pivotes finales.
@@ -83,8 +83,8 @@ def eliminar(matriz):
     return pasos, pivotes
 
 
-def _calcular_rangos(matriz_escalonada, n):
-    """Calcula el rango de A y el de su matriz ampliada, devolviéndolos en ese orden
+def obtener_rangos(matriz_escalonada, n):
+    """Calcula el rango de A y el de su matriz aumentada, devolviéndolos en ese orden
     a partir de una matriz ya escalonada.
 
     Recibe el número de variables 'n' y asume que el escalonamiento ya se hizo
@@ -101,14 +101,14 @@ def _calcular_rangos(matriz_escalonada, n):
             # En A todo es cero, pero en b no: queda algo tipo 0 = 5 (contradicción)
             hay_contradiccion = True
 
-    rango_ampliada = rango_A
+    rango_aumentada = rango_A
     if hay_contradiccion:
-        # Una fila 0 = algo_distinto_de_cero sube el rango de la ampliada en 1
-        rango_ampliada += 1
-    return rango_A, rango_ampliada
+        # Una fila 0 = algo_distinto_de_cero sube el rango de la aumentada en 1
+        rango_aumentada += 1
+    return rango_A, rango_aumentada
 
 
-def _sustitucion_atras(matriz, pivotes, valores, homogeneo=False):
+def despejar_variables(matriz, pivotes, valores, homogeneo=False):
     """Resuelve por sustitución hacia atrás las variables con pivote en una matriz
     ya escalonada, partiendo de los valores dados para las variables libres.
 
@@ -127,11 +127,11 @@ def _sustitucion_atras(matriz, pivotes, valores, homogeneo=False):
     return solucion
 
 
-def _calcular_Ax(matriz_inicial, solucion):
+def multiplicar_Ax(matriz_inicial, solucion):
     """Calcula el producto A * x para una solución propuesta, usando los coeficientes
-    originales guardados en la matriz ampliada inicial.
+    originales guardados en la matriz aumentada inicial.
 
-    Recibe la matriz ampliada de partida y la lista de valores propuestos para cada
+    Recibe la matriz aumentada de partida y la lista de valores propuestos para cada
     incógnita. Devuelve una lista con el resultado de cada ecuación para verificar
     si coincide con el vector b.
     """
@@ -143,7 +143,7 @@ def _calcular_Ax(matriz_inicial, solucion):
     ]
 
 
-def _expresion_general(constante, coeficientes, parametros):
+def formatear_ecuacion_parametrica(constante, coeficientes, parametros):
     """Arma el texto de una variable escrita en función de los parámetros
     (por ejemplo, "3 - 2*t_1 + t_2" a partir de constante=3, coeficientes=[-2, 1]
     y parámetros=["t_1", "t_2"]).
@@ -165,7 +165,7 @@ def _expresion_general(constante, coeficientes, parametros):
     return expresion or "0"
 
 
-def resolver_sistema_completo(A, b):
+def resolver_gauss(A, b):
     """Resuelve un sistema cuadrado y devuelve un diccionario con sus resultados.
 
     A contiene los coeficientes y b los términos independientes. El campo tipo
@@ -173,12 +173,12 @@ def resolver_sistema_completo(A, b):
     pivotes, rangos y un mensaje, los demás campos dependen de la clasificacion.
     Las matrices y soluciones conservan sus números como objetos Fraction.
     """
-    matriz_inicial = _crear_matriz_ampliada(A, b)
+    matriz_inicial = armar_matriz_aumentada(A, b)
     # Trabajamos sobre una copia para conservar intacta la matriz inicial
     matriz_esc = [fila[:] for fila in matriz_inicial]
-    pasos, pivotes = eliminar(matriz_esc)
+    pasos, pivotes = escalonar_matriz(matriz_esc)
     n = len(A)
-    rango_A, rango_amp = _calcular_rangos(matriz_esc, n)
+    rango_A, rango_amp = obtener_rangos(matriz_esc, n)
     # Ignoramos pivotes en la columna n porque esa columna corresponde a b, no a una variable
     columnas_pivote = [columna for fila, columna in pivotes if columna < n]
 
@@ -193,21 +193,21 @@ def resolver_sistema_completo(A, b):
     }
 
     if rango_A < rango_amp:
-        # Si la ampliada tiene más rango que A, hay contradicción -> no existe solución
+        # Si la aumentada tiene más rango que A, hay contradicción -> no existe solución
         resultado["tipo"] = "ninguna"
         resultado["mensaje"] = "El sistema no tiene solución (Inconsistente)."
         return resultado
 
     ceros = [Fraction(0)] * n
     # Ponemos variables libres en 0 para sacar una solución base (o la única si no hay libres)
-    solucion_base = _sustitucion_atras(matriz_esc, pivotes, ceros)
+    solucion_base = despejar_variables(matriz_esc, pivotes, ceros)
 
     if rango_A == n:
         # Hay pivote en cada variable: el sistema tiene una sola solución
         resultado["tipo"] = "unica"
         resultado["mensaje"] = "El sistema tiene solución única."
         resultado["solucion"] = solucion_base
-        resultado["Ax"] = _calcular_Ax(matriz_inicial, solucion_base)
+        resultado["Ax"] = multiplicar_Ax(matriz_inicial, solucion_base)
         resultado["comprobacion"] = resultado["Ax"] == [fila[-1] for fila in matriz_inicial]
         return resultado
 
@@ -219,14 +219,14 @@ def resolver_sistema_completo(A, b):
         valores = [Fraction(0)] * n
         # Ponemos 1 en esta variable libre y 0 en las demás para ver cómo mueve al resto
         valores[columna] = Fraction(1)
-        vector = _sustitucion_atras(matriz_esc, pivotes, valores, homogeneo=True)
+        vector = despejar_variables(matriz_esc, pivotes, valores, homogeneo=True)
         vectores_parametros.append(vector)
 
     solucion_general = []
     for columna in range(n):
         # Armamos cada x_i como: valor_base + coef_1*t_1 + coef_2*t_2 + ...
         coeficientes = [vector[columna] for vector in vectores_parametros]
-        expresion = _expresion_general(solucion_base[columna], coeficientes, parametros)
+        expresion = formatear_ecuacion_parametrica(solucion_base[columna], coeficientes, parametros)
         solucion_general.append(f"x_{columna + 1} = {expresion}")
 
     resultado.update({
@@ -241,11 +241,11 @@ def resolver_sistema_completo(A, b):
     return resultado
 
 
-def obtener_solucion_particular(resultado, valores_parametros):
+def evaluar_parametros(resultado, valores_parametros):
     """Evalúa la solución general con valores concretos para cada parámetro y comprueba
     que la solución resultante cumpla Ax = b.
 
-    'resultado' debe venir de resolver_sistema_completo en un sistema de infinitas
+    'resultado' debe venir de resolver_gauss en un sistema de infinitas
     soluciones, y 'valores_parametros' debe dar un valor por cada parámetro en orden.
     No modifica 'resultado' y devuelve solucion, Ax, b y comprobacion.
     """
@@ -257,11 +257,11 @@ def obtener_solucion_particular(resultado, valores_parametros):
     # Partimos de la solución base y le sumamos cada parámetro multiplicado por su vector
     solucion = resultado["solucion_base"][:]
     for valor, vector in zip(valores_parametros, resultado["vectores_parametros"]):
-        parametro = _convertir_fraccion(valor)
+        parametro = a_fraccion(valor)
         for columna in range(len(solucion)):
             solucion[columna] += parametro * vector[columna]
 
-    valores_Ax = _calcular_Ax(resultado["matriz_inicial"], solucion)
+    valores_Ax = multiplicar_Ax(resultado["matriz_inicial"], solucion)
     valores_b = [fila[-1] for fila in resultado["matriz_inicial"]]
     return {
         "solucion": solucion,
@@ -271,7 +271,7 @@ def obtener_solucion_particular(resultado, valores_parametros):
     }
 
 
-#Pruebas
+# Pruebas
 """
 def imprimir_resultado(resultado):
     print("=" * 50)
@@ -302,17 +302,17 @@ def imprimir_resultado(resultado):
 # --- Ejemplo 1: Solución única ---
 A1 = [[3, 2, 1], [1, 2, 1], [1, 1, 2]]
 b1 = [48, 28, 31]
-r1 = resolver_sistema_completo(A1, b1)
+r1 = resolver_gauss(A1, b1)
 imprimir_resultado(r1)
 
 
 # --- Ejemplo 2: Infinitas soluciones + particular con t_1 = 2 ---
 A2 = [[1, 2, -1], [2, 4, -2], [1, 1, 1]]
 b2 = [3, 6, 6]
-r2 = resolver_sistema_completo(A2, b2)
+r2 = resolver_gauss(A2, b2)
 imprimir_resultado(r2)
 
-p2 = obtener_solucion_particular(r2, [2])
+p2 = evaluar_parametros(r2, [2])
 part_str = ", ".join(f"x_{i+1} = {val}" for i, val in enumerate(p2["solucion"]))
 print(f"\nSolución particular (t_1 = 2): {part_str}")
 print("Comprobación Ax:", [str(v) for v in p2["Ax"]], "| ¿Cumple Ax = b?:", p2["comprobacion"])
@@ -321,6 +321,6 @@ print("Comprobación Ax:", [str(v) for v in p2["Ax"]], "| ¿Cumple Ax = b?:", p2
 # --- Ejemplo 3: Sin solución ---
 A3 = [[1, 1, 1], [2, 2, 2], [1, -1, 0]]
 b3 = [1, 3, 0]
-r3 = resolver_sistema_completo(A3, b3)
+r3 = resolver_gauss(A3, b3)
 imprimir_resultado(r3)
 """
