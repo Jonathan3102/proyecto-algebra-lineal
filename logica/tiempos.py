@@ -1,7 +1,17 @@
 import time
 import copy
 import random
-import Gauss_Seidel 
+import Gauss_Seidel
+from eliminacion_gaussiana import resolver_gauss
+
+
+def resolver_gauss_numerico(A, b):
+    """Adapta resolver_gauss para devolver la solución como lista de float."""
+    res = resolver_gauss(A, b)
+    if res["tipo"] != "unica":
+        raise ValueError(res["mensaje"])
+    return [float(valor) for valor in res["solucion"]]
+
 
 def medir_tiempo(funcion, A, b, repeticiones):
     """
@@ -28,6 +38,7 @@ def medir_tiempo(funcion, A, b, repeticiones):
     tiempo_promedio = total / repeticiones
     return {"total": total, "promedio": tiempo_promedio, "resultado": resultado}
 
+
 def comparar_tiempos(A, b, metodo_directo, x0, tol, max_iter, k):
     """
     Compara los tiempos de ejecución de un método directo (eliminiación Gaussiana) y el método de Gauss-Seidel.
@@ -44,6 +55,10 @@ def comparar_tiempos(A, b, metodo_directo, x0, tol, max_iter, k):
     Returns:
         dict: Un diccionario con los tiempos y resultados de ambos métodos.
     """
+    chequeo = resolver_gauss(A, b)
+    if chequeo["tipo"] != "unica":
+        raise ValueError(f"No se puede comparar: {chequeo['mensaje']}")
+
     tiempo_directo = medir_tiempo(metodo_directo, A, b, k)
     tiempo_gauss_seidel = medir_tiempo(lambda A, b: Gauss_Seidel.gauss_seidel(A, b, x0, tol, max_iter), A, b, k)
 
@@ -59,6 +74,7 @@ def comparar_tiempos(A, b, metodo_directo, x0, tol, max_iter, k):
         "veces": veces
    }
 
+
 def modo_experimento(tamano, metodo_directo, x0, tol, max_iter, k):
     """
     Usa un sistema generado para cada n, compara ambos métodos y devuelve una fila por tamaño
@@ -72,6 +88,7 @@ def modo_experimento(tamano, metodo_directo, x0, tol, max_iter, k):
     """
     A_, b_ = generar_sistema(tamano)
     return comparar_tiempos(A_, b_, metodo_directo, x0, tol, max_iter, k)
+
 
 def generar_sistema(tamano):
     """
@@ -97,8 +114,6 @@ def generar_sistema(tamano):
 
     return A, b
 
-def gauss_provicional(A, b): #solo prueba
-    return [0.0] * len(b)
 
 def main():
     """
@@ -112,7 +127,7 @@ def main():
     max_iter = 100  # Número máximo de iteraciones para el método de Gauss-Seidel
     k = 10  # Número de repeticiones para medir el tiempo
 
-    resultado_experimento = modo_experimento(tamano, gauss_provicional, x0, tol, max_iter, k)
+    resultado_experimento = modo_experimento(tamano, resolver_gauss_numerico, x0, tol, max_iter, k)
 
     #Pruebas en consola, los datos deben mostrarse en la interfaz de usuario
     print("----Resultados Gauss-Seidel vs Eliminación Gaussiana----\n")
@@ -130,6 +145,7 @@ def main():
 
     print(f"El método más rápido es: {resultado_experimento['mas_rapido']}, siendo {resultado_experimento['veces']:.2f} veces más rápido que el otro método.")
     print("\nFin del experimento")
+
 
 if __name__ == "__main__":
     main()
